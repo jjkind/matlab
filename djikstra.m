@@ -1,14 +1,29 @@
-clc; clear all;
+%--------------------------------------------------------------------------
+%* Function: Djikstra's Algorithm w/ Node Generation
+%* Jeremy Kindseth
+%* 12/21/2014
+%* 
+%* Notes: Input consists of total number of nodes (nPoints), the dimensions
+%* of the space (xDim, yDim), a decay factor for determining nodal
+%* connectivity (lambda ~0.05-0.5, lower is less connectivity), start node
+%* (sNode) and finish node (fNode).  Output is optimal nodal path (path)
+%*  and size of priority queue when algorithm terminates (pqSize)
+%*
+%--------------------------------------------------------------------------
 
-% The data
+function [path pqSize] = djikstra2(nPoints,xDim,yDim,lambda,sNode,fNode)
 
-pts = 800;              % Number of nodes
-dim = 2;                % Dimensionality
-A = zeros(pts,dim);     % Initialize
-dim1 = 100;           % Linear space dimension
-dim2 = 100;           % Linear space dimension
+clc; clearvars -except nPoints xDim yDim lambda sNode fNode;
+pts=nPoints;            
+dim1=xDim;
+dim2=yDim;
+start=sNode;
+last=fNode;
 
-% Distribute points throughout space
+dim = 2;                                                            % Dimensionality
+A = zeros(pts,dim); 
+
+%% Build Node Network %%
 i=0;
 while(i<dim)
   i=i+1;
@@ -17,12 +32,12 @@ while(i<dim)
 end  
 
 G=zeros(pts);
-dist=zeros(pts,pts);        % Distance matrix
+dist=zeros(pts,pts);                                                % Distance matrix
 output=0:1;
 
-for i=1:pts                 % i = row
+for i=1:pts                                                         % i = row
     j=0;
-    while(j<pts)            % j = column
+    while(j<pts)                                                    % j = column
         j=j+1;
         dist(i,j)=pdist([A(i,:);A(j,:)],'euclidean');
     end
@@ -32,7 +47,7 @@ sortDist=sort(dist(i,:));
 maxDist=sortDist(pts);
 minDist=sortDist(2);
 diff=0.5*(maxDist-minDist);
-lam=-1/(0.1*maxDist);         % exponential decay term
+lam=-1/(lambda*maxDist);                                            % exponential decay term
 z=exp(lam.*dist(i,:));
     
 k=0;
@@ -46,9 +61,9 @@ while(k<pts)
         end
     end
     while(sum(G(k,:))==0)
-        num=randi([k pts],1);
+        num=randi([k pts],1);                                       % If node is unconnected, give it one connection
         if(num~=k)
-            G(k,num)=1;
+            G(k,num)=1;                                              
         elseif(k==pts)
             break            
         end
@@ -61,48 +76,30 @@ for z=1:pts
     end
 end
 
-
-
- x = [1 2 2 2 ]; % Node x coordinates
- y = [3 3 2 1];  % Node y coordinates
- nx = length(x);
- lbl = cellstr(num2str((1:pts)')); % Node labels
- r = 1.5; % radius of nodes
- adj = zeros(nx); % Adjacency matrix for edges,
- adj(1,2) = 1;    % values specify line width
- adj(1,3) = 1;
- adj(1,4) = 1;
- % The plot
+ %% Plot Nodes %%
  figure;
  axes;
  hold on;
- linewidth = unique(adj(adj>0));
+ r=1.5;                                                         % Node size (radius)
+ lbl = cellstr(num2str((1:pts)'));                              % Node labels
+ title('Node Plot')
  gplot(G,A); hold on;
+ xlabel('X Axis (Distance)');
+ ylabel('Y Axis (Distance)');
  theta = linspace(0, 2*pi, 30)';
  x=A(:,1);
  y=A(:,2);
  xc = bsxfun(@plus, r .* cos(theta), x');
- %xc = bsxfun(@plus, r .* cos(theta), A(:,1));
  yc = bsxfun(@plus, r .* sin(theta), y');
- %yc = bsxfun(@plus, r .* sin(theta), A(:,2));
  patch(xc, yc, 'w');
  text(x,y,lbl);
  axis equal;
- 
- 
- tic
- % Djikstra's Algorithm
- % define start and end nodes
- start = 1;
- last = pts;
- cn=start;              % current node (set to start)
- cnindex=1;
- %pq=[linspace(1,pts,pts)' zeros(pts,1) inf(pts,1) start.*ones(pts,1)];   % Priority Queue: [(int)node index; (bool)visited; (int)node value; (string)path]
- %pq(start,2)=1;         % set start node as visited
- 
- pq=struct('node',start,'visited',1,'value',0,'parent',start);  % Visited because is current node
- 
- 
+
+ %% Djikstra's Algorithm %%
+ tic                                                            % Start clock to time execution
+ cn=start;                                                      % Current node (set to start)
+ cnindex=1;                                                     % Index of array of structs
+ pq=struct('node',start,'visited',1,'value',0,'parent',start);  % Start Priority Queue
  % Find connected nodes
  while(1)
      for i=1:pts
@@ -111,10 +108,9 @@ end
              flag=0;
              for j=1:sz % Does node exist?
                  if(pq(j).node==i && pq(j).visited==0)
-                     % Exists in PQ
                      flag=1;
                      if(pq(j).value>(pq(cnindex).value+dist(cn,i))) % If distance from current node is smaller than stored node value, update
-                         pq(j).value=pq(cnindex).value+dist(cn,i); % Update value
+                         pq(j).value=pq(cnindex).value+dist(cn,i);  % Update value
                          pq(j).parent=cn;
                      end
                  elseif(pq(j).node==i && pq(j).visited==1)
@@ -123,14 +119,10 @@ end
              end
              
              if(flag==0) % Node did not exist, create new node
-                 %pq(sz+1)=struct('node',i,'visited',[],'value',(pq(cnindex).value+dist(cn,i)),'parent',cn);   % Create new structure
-                 pq(sz+1)=struct('node',i,'visited',0,'value',(pq(cnindex).value+dist(cn,i)),'parent',cn);
-                 
+                 pq(sz+1)=struct('node',i,'visited',0,'value',(pq(cnindex).value+dist(cn,i)),'parent',cn); % Create new structure
              end 
-             
          end
      end
-     
      % Find smallest value from node that hasn't been visited
      sz=length(pq);
      smallest=Inf;
@@ -142,10 +134,8 @@ end
              cnindex=m;
          end
      end       
-     
      % Mark new current node as visited
      pq(cnindex).visited=1;
-     
      % Check to see if you've visited the goal node
      if(cn==last)
          % Find node path
@@ -161,13 +151,16 @@ end
                      break
                  end
              end
-             
          end
-         %pq(cnindex).value
-         path
-         toc
-         break
+         toc                                                    % End timer
+         pqSize=length(pq);                                     % Size of pq
+         break                                                  % Full path found
      end
-
-     %break
  end
+end
+ 
+ 
+     
+ 
+ 
+ 
