@@ -1,14 +1,14 @@
 %--------------------------------------------------------------------------
-%* Function: Djikstra's Algorithm w/ Node Generation
-%* Jeremy Kindseth
-%* 12/21/2014
-%* 
-%* Notes: Input consists of total number of nodes (nPoints), the dimensions
-%* of the space (xDim, yDim), a decay factor for determining nodal
-%* connectivity (lambda ~0.05-0.5, lower is less connectivity), start node
-%* (sNode) and finish node (fNode).  Output is optimal nodal path (path)
-%*  and size of priority queue when algorithm terminates (pqSize)
-%*
+% Function: Djikstra's Algorithm w/ Node Generation
+% Jeremy Kindseth
+% 12/21/2014
+% 
+% Notes: Input consists of total number of nodes (nPoints), the dimensions
+% of the space (xDim, yDim), a decay factor for determining nodal
+% connectivity (lambda ~0.05-0.5, lower is less connectivity), start node
+% (sNode) and finish node (fNode).  Output is optimal nodal path (path)
+%  and size of priority queue when algorithm terminates (pqSize)
+%
 %--------------------------------------------------------------------------
 
 function [path pqSize] = djikstra2(nPoints,xDim,yDim,lambda,sNode,fNode)
